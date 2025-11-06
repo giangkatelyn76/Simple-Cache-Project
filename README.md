@@ -1,125 +1,56 @@
-// Katelyn Giang
-// COSC 4310 - 01
-// Dr. Jane Liu
-// 5 November 2025
+Simple-Cache-Project
 
-import java.util.LinkedList;
-import java.util.Scanner;
+This project will focus on the memory system focusing on cache architecture.
 
-public class SimpleCache {
+Direct-mapped, set-associative, and fully associative cache organizations are supported by this program's simulation of a basic cache memory system. It replaces fully associative and set-associative caches with LRU (Least Recently Used) caches.
 
-    static class CacheBlock {
-        int tag;
-        boolean valid;
 
-        public CacheBlock() {
-            this.valid = false;
-        }
-    }
+COMPLIATION: To compile the program, open a terminal or command prompt in the directory where SimpleCache.java is located and run: javac SimpleCache.java
 
-    public static void main(String[] args) {
-        Scanner scanner = new Scanner(System.in);
+If successful, this will produce a compiled file named: SimpleCache.class
 
-        System.out.print("Enter number of cache blocks: ");
-        int numCacheBlocks = scanner.nextInt();
 
-        System.out.print("Enter set associativity (1 for direct-mapped, 2 for 2-way, 4 for 4-way, 0 for fully associative): ");
-        int associativity = scanner.nextInt();
+RUN: After compiling, run the program using: java SimpleCache
 
-        // Calculate number of sets
-        int numSets = (associativity == 0) ? 1 : numCacheBlocks / associativity;
-        int blocksPerSet = (associativity == 0) ? numCacheBlocks : associativity;
+You’ll be prompted for:
 
-        CacheBlock[][] cache = new CacheBlock[numSets][blocksPerSet];
-        for (int i = 0; i < numSets; i++) {
-            for (int j = 0; j < blocksPerSet; j++) {
-                cache[i][j] = new CacheBlock();
-            }
-        }
+Number of cache blocks (e.g., 8)
 
-        // LRU lists for each set
-        LinkedList<Integer>[] lruLists = new LinkedList[numSets];
-        for (int i = 0; i < numSets; i++) {
-            lruLists[i] = new LinkedList<>();
-        }
+Set associativity
 
-        int totalReferences = 0;
-        int missCount = 0;
+1 → Direct-mapped
+2 → 2-way set associative
+4 → 4-way set associative
+0 → Fully associative
 
-        System.out.println("Enter block address references (enter -1 to stop):");
-        while (true) {
-            int blockAddress = scanner.nextInt();
-            if (blockAddress == -1) {
-                break;
-            }
+Block address references Enter a series of integer block addresses (e.g., 0 1 2 3 0 1 4 0 1 -1) Use -1 to stop input and calculate the miss rate.
 
-            totalReferences++;
 
-            int setIndex;
-            int tag;
+Representation in Cache:
 
-            if (associativity == 0) { // Fully associative
-                setIndex = 0;
-                tag = blockAddress;
-            } else { // Direct-mapped or Set-associative
-                setIndex = blockAddress % numSets;
-                tag = blockAddress / numSets;
-            }
+Makes use of a 2D CacheBlock object array.
 
-            boolean hit = false;
-            int hitIndex = -1;
+To keep track of usage order, each set keeps an LRU list.
 
-            // Check for hit
-            for (int i = 0; i < blocksPerSet; i++) {
-                if (cache[setIndex][i].valid && cache[setIndex][i].tag == tag) {
-                    hit = true;
-                    hitIndex = i;
-                    break;
-                }
-            }
 
-            if (hit) {
-                // Update LRU: move to front
-                lruLists[setIndex].remove((Integer) hitIndex);
-                lruLists[setIndex].addFirst(hitIndex);
-                System.out.println("Cache Hit for block address " + blockAddress);
-            } else {
-                missCount++;
-                System.out.println("Cache Miss for block address " + blockAddress);
+Policy for Replacement:
 
-                // Find a block to replace (LRU)
-                int replaceIndex;
-                if (lruLists[setIndex].size() < blocksPerSet) { // Space available
-                    replaceIndex = lruLists[setIndex].size(); // Use the next available slot
-                } else { // LRU replacement
-                    replaceIndex = lruLists[setIndex].removeLast();
-                }
+When a set is full, LRU (Least Recently Used) is used.
 
-                // Update cache block
-                cache[setIndex][replaceIndex].tag = tag;
-                cache[setIndex][replaceIndex].valid = true;
-                lruLists[setIndex].addFirst(replaceIndex);
-            }
+Hit/Miss Identification:
 
-            // Print cache content
-            System.out.println("Cache Content:");
-            for (int i = 0; i < numSets; i++) {
-                System.out.print("Set " + i + ": ");
-                for (int j = 0; j < blocksPerSet; j++) {
-                    if (cache[i][j].valid) {
-                        System.out.print("[Tag: " + cache[i][j].tag + "] ");
-                    } else {
-                        System.out.print("[Empty] ");
-                    }
-                }
-                System.out.println();
-            }
-            System.out.println("--------------------");
-        }
+Cache hit: the tag is valid and present in the set.
 
-        double missRate = (double) missCount / totalReferences * 100;
-        System.out.printf("Cache Miss Rate: %.2f%%\n", missRate);
+Cache miss: tag not found; replacement could happen.
 
-        scanner.close();
-    }
-}
+
+TEST: You can test various cache configurations:
+
+Configuration Type Associativity Input 
+Example: Direct-Mapped 1 8 blocks → 8 sets of 1 block each
+2-Way Set Associative 2 8 blocks → 4 sets of 2 blocks each 
+4-Way Set Associative 4 8 blocks → 2 sets of 4 blocks each 
+Fully Associative 0 8 blocks → 1 set of 8 blocks
+
+Notes: Input must be integers only. The program stops reading addresses when you enter -1. The final miss rate is printed at the end of execution.
+
